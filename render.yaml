@@ -1,9 +1,9 @@
 services:
   - type: web
     name: telegram-multi-bot
-    runtime: image
-    repo: https://github.com/jamesfemi/Davidexpert5bot
+    runtime: docker
     plan: free
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
