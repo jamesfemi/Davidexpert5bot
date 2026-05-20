@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: telegram-multi-bot
+    runtime: image
+    repo: https://github.com/jamesfemi/Davidexpert5bot
+    plan: free
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          type: web
+          name: telegram-multi-bot
+          property: host
