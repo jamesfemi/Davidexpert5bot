@@ -1,7 +1,6 @@
 import logging
 import os
 import tempfile
-import asyncio
 from typing import Dict, List, Optional
 from contextlib import asynccontextmanager
 
@@ -261,45 +260,6 @@ async def healthcheck(request):
     """Health check endpoint for Render."""
     return JSONResponse({"status": "ok"})
 
-async def setup_webhook(app: Application):
-    """Set up the webhook for the bot."""
-    # Wait for the application to be ready
-    await app.initialize()
-    await app.start()
-    
-    # Get the webhook URL from environment variable
-    webhook_url = os.environ.get("RENDER_EXTERNAL_URL")
-    if not webhook_url:
-        logger.error("RENDER_EXTERNAL_URL not set. Webhook cannot be configured.")
-        return
-    
-    webhook_path = f"/webhook/{app.bot.token}"
-    full_webhook_url = f"{webhook_url}{webhook_path}"
-    
-    # Set the webhook
-    await app.bot.set_webhook(full_webhook_url)
-    logger.info(f"Webhook set to {full_webhook_url}")
-
-async def shutdown_webhook(app: Application):
-    """Shutdown webhook and clean up."""
-    await app.bot.delete_webhook()
-    await app.shutdown()
-
-@asynccontextmanager
-async def lifespan(app: Starlette):
-    """Lifespan context manager for Starlette app."""
-    # Startup
-    webhook_url = os.environ.get("RENDER_EXTERNAL_URL")
-    if webhook_url:
-        await telegram_app.bot.set_webhook(f"{webhook_url}/webhook")
-        logger.info(f"Webhook set to {webhook_url}/webhook")
-    else:
-        logger.warning("RENDER_EXTERNAL_URL not set, webhook not configured")
-    yield
-    # Shutdown
-    await telegram_app.bot.delete_webhook()
-    await telegram_app.shutdown()
-
 # ------------------------- Main -------------------------
 
 # Create the Telegram application
@@ -357,7 +317,6 @@ async def main():
                 Route("/healthcheck", healthcheck, methods=["GET"]),
                 Route("/webhook", telegram_app.webhook_endpoint, methods=["POST"]),
             ],
-            lifespan=lifespan,
         )
         
         # Run the Starlette app with uvicorn
@@ -374,4 +333,5 @@ async def main():
         await asyncio.Event().wait()
 
 if __name__ == '__main__':
+    import asyncio
     asyncio.run(main())
